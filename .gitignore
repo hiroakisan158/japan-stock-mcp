@@ -1,0 +1,36 @@
+# データ・DB
+data/stocks.db
+data/stocks.db-shm
+data/stocks.db-wal
+data/backups/
+data/batch_progress.json
+
+# 環境変数
+.env
+.env.*
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+.uv/
+*.egg-info/
+dist/
+build/
+
+# uv lock (optional - コメントアウトで管理対象に)
+# uv.lock
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+.docker/
