@@ -19,8 +19,10 @@ INSTANT_CONTEXTS = [
 TAG_CANDIDATES: dict[str, list[str]] = {
     # IFRSタグを先に列挙（IFRS企業: CurrentYearDuration_NonConsolidatedMember の個別値より優先）
     "revenue": [
-        "NetSalesIFRS",
         "SalesAndFinancialServicesRevenueIFRS",
+        "SalesRevenuesIFRS",
+        "TotalNetRevenuesIFRS",
+        "NetSalesIFRS",
         "RevenueIFRS",
         "NetSales",
         "Revenue",
