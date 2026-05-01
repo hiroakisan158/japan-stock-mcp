@@ -1,4 +1,4 @@
-.PHONY: mcp build init batch batch-init batch-sector prices prices-sector quarters quarters-sector sync sync-sector sync-status status db-stats db-status-report backups clean skill
+.PHONY: mcp build init batch batch-init batch-init-sector batch-sector prices prices-sector quarters quarters-sector sync sync-sector sync-status status db-stats db-status-report backups clean skill
 
 # --- MCP サーバー ---
 
@@ -21,8 +21,12 @@ batch-init:
 batch:
 	docker compose --profile batch run -d --rm batch python run.py --mode update
 
+batch-init-sector:
+	@sector="$(SECTOR)"; [ -z "$$sector" ] && read -p "セクター名: " sector; \
+	docker compose --profile batch run --rm batch python run.py --mode initial --sector "$$sector"
+
 batch-sector:
-	@read -p "セクター名: " sector; \
+	@sector="$(SECTOR)"; [ -z "$$sector" ] && read -p "セクター名: " sector; \
 	docker compose --profile batch run --rm batch python run.py --mode update --sector "$$sector"
 
 # --- 株価データバッチ ---
@@ -31,7 +35,7 @@ prices:
 	docker compose --profile batch run -d --rm batch python run.py --mode fetch-prices
 
 prices-sector:
-	@read -p "セクター名: " sector; \
+	@sector="$(SECTOR)"; [ -z "$$sector" ] && read -p "セクター名: " sector; \
 	docker compose --profile batch run --rm batch python run.py --mode fetch-prices --sector "$$sector"
 
 # --- 四半期財務データバッチ ---
@@ -40,7 +44,7 @@ quarters:
 	docker compose --profile batch run -d --rm batch python run.py --mode fetch-quarterly
 
 quarters-sector:
-	@read -p "セクター名: " sector; \
+	@sector="$(SECTOR)"; [ -z "$$sector" ] && read -p "セクター名: " sector; \
 	docker compose --profile batch run --rm batch python run.py --mode fetch-quarterly --sector "$$sector"
 
 # --- 一括同期 ---
@@ -51,7 +55,7 @@ sync:
 		batch python sync_runner.py
 
 sync-sector:
-	@read -p "セクター名: " sector; \
+	@sector="$(SECTOR)"; [ -z "$$sector" ] && read -p "セクター名: " sector; \
 	docker compose --profile batch run --rm \
 		-e STATUS_OUTPUT=/workspace/tmp/db_status.md \
 		batch python sync_runner.py --sector "$$sector"

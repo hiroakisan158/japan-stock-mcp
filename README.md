@@ -335,9 +335,10 @@ make sync-sector    # セクター指定（入力プロンプトあり）
 make sync-status    # 直近 sync の進捗確認（data/sync_progress.json）
 
 # 個別バッチ
-make batch-init     # 初回バッチ（全銘柄・過去5年、非同期）
-make batch          # 差分更新バッチ（非同期）
-make batch-sector   # セクター指定バッチ（同期）
+make batch-init          # 初回バッチ（全銘柄・過去5年、非同期）
+make batch-init-sector   # 初回バッチ・セクター指定（SECTOR=ゴム製品、同期）
+make batch               # 差分更新バッチ（非同期）
+make batch-sector        # セクター指定差分バッチ（同期）
 make prices         # 全銘柄株価取得（非同期）
 make prices-sector  # セクター指定株価取得（同期）
 make quarters       # 全銘柄四半期財務取得（非同期）
