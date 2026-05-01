@@ -12,7 +12,8 @@ MCP Server  app/server.py  (uv, stdio, host process)
 data/stocks.db
     ▲  SQLite write
 Batch  batch/  (Docker container)
-    ├── EDINET API → XBRL ZIP → xbrl_parser.py → financials table
+    ├── EDINET API → XBRL ZIP → xbrl_parser.py → financials table (annual)
+    ├── J-Quants API → jquants_fetcher.py → financials table (quarterly Q1/Q2/Q3)
     └── yfinance → price_fetcher.py → prices table
 ```
 
@@ -45,7 +46,7 @@ Batch  batch/  (Docker container)
 - `edinet.py`: EDINET API client — fetches document lists and downloads XBRL ZIPs
 - `xbrl_parser.py`: parses XBRL ZIP, extracts financials, computes derived metrics
 - `price_fetcher.py`: fetches price/valuation via yfinance
-- `quarterly_fetcher.py`: fetches quarterly PL/BS/CF via yfinance, upserts into `financials` with `source='yfinance'`
+- `jquants_fetcher.py`: fetches quarterly PL/BS/CF via J-Quants API v2 (`ClientV2.get_fin_summary`), upserts into `financials` with `source='jquants'`
 - `backup.py`: SQLite backup (local + optional S3)
 - `init_db.py`: runs SQL migrations in `migrations/`
 
@@ -56,3 +57,4 @@ Batch  batch/  (Docker container)
 3. `xbrl_parser.py` extracts financial values using tag priority lists (first-match wins)
 4. Derived metrics (ROE, ROA, margins, etc.) computed in Python and stored alongside raw values
 5. `price_fetcher.py` maps `sec_code` → Yahoo Finance ticker (`{sec_code}.T`) and fetches via yfinance
+6. `jquants_fetcher.py` calls `ClientV2.get_fin_summary(code=sec_code)`, deduplicates revised disclosures by keeping latest `DiscDate`, maps V2 short column names (`Sales`/`OP`/`OdP`/`NP`/`TA`/`Eq`/`CFO`/`CFI`/`CFF`/`CashEq`) to DB schema

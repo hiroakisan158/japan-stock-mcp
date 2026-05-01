@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-MCP server for Japan stock financial screening and analysis via Claude Desktop. Collects financial data from EDINET (XBRL) and stock prices from yfinance into a local SQLite database.
+MCP server for Japan stock financial screening and analysis via Claude Desktop. Collects annual financial data from EDINET (XBRL), quarterly data from J-Quants API, and stock prices from yfinance into a local SQLite database.
 
 ## Commands
 
@@ -21,8 +21,8 @@ make batch-sector     # Interactive: specify sector (foreground)
 make prices           # All companies (background, 30–60 min)
 make prices-sector    # Interactive: specify sector (foreground)
 
-# Quarterly financial data (yfinance)
-make quarters         # All companies (background, ~2h)
+# Quarterly financial data (J-Quants API)
+make quarters         # All companies (background, ~40 min)
 make quarters-sector  # Interactive: specify sector (foreground)
 
 # Status

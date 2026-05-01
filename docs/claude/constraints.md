@@ -38,17 +38,23 @@ If `data/batch_progress.json` exists after a batch run, the run ended abnormally
 
 The MCP server runs directly on the WSL host via `uv` (not in Docker). This is intentional: Docker adds latency and complexity to stdio transport that causes instability with Claude Desktop.
 
-## yfinance Quarterly Data Limitations
+## J-Quants Quarterly Data Constraints
 
-- `ordinary_income` is not available from yfinance (Japan-specific line item); stored as NULL
-- Some Japanese companies report YTD cumulative figures instead of single-quarter figures. `quarterly_fetcher.py` logs a warning when Q revenue ≥ 95% of annual revenue
-- Derived metrics (ROE, ROA, equity_ratio, current_ratio, etc.) are NULL for yfinance rows — only PL-based margins are computed
-- Quarter number is inferred from `period_end` relative to the company's fiscal year end month (derived from existing annual records). Companies with no annual data in `financials` are skipped
+- **API version**: Uses `jquants-api-client >= 1.0.0` with `ClientV2` (V1 `Client` is deprecated). Authentication via `api_key` (stored as `JQUANTS_REFRESH_TOKEN` env var for historical reasons).
+- **Plan**: Light plan (月1,650円) — covers all listed companies, past 5 years.
+- **Coverage**: `TypeOfCurrentPeriod` values `1Q`/`2Q`/`3Q` are stored; `FY` and `4Q` are skipped (covered by EDINET annual data).
+- **IFRS companies**: `OrdinaryProfit` (`OdP`) is empty for IFRS filers (no "ordinary profit" concept); stored as NULL.
+- **Derived metrics**: Only PL-based margins (`operating_profit_margin`, `ordinary_profit_margin`, `net_profit_margin`) and `free_cf` are computed. Balance sheet ratios (ROE, ROA, equity_ratio, etc.) are NULL for jquants rows.
+- **Revised disclosures**: When a company re-files a quarter, multiple rows appear for the same `CurPerType`+`CurPerEn`. The fetcher keeps only the latest `DiscDate`.
+- **Rate limiting**: The API enforces request rate limits. The fetcher sleeps 0.6 s between requests and retries up to 3 times (10 s / 20 s backoff) on 429 errors.
+- **Units**: Values are in yen (円), same as EDINET data.
+- **`net_assets` vs `shareholders_equity`**: J-Quants `Equity` field maps to `net_assets` (total equity). `shareholders_equity` is left NULL.
 
 ## Environment Variables
 
 | Variable | Required | Notes |
 |----------|----------|-------|
 | `EDINET_API_KEY` | Yes | EDINET API key |
+| `JQUANTS_REFRESH_TOKEN` | Yes (for quarterly) | J-Quants API v2 key (passed as `api_key` to `ClientV2`) |
 | `S3_BUCKET` | No | S3 backup destination; if unset, only local backups |
 | `DB_PATH` | No | Defaults to `/data/stocks.db` inside Docker |

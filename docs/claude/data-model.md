@@ -23,9 +23,12 @@
 | Derived | `free_cf`, `net_cash`, `gross_profit_margin`, `operating_profit_margin`, `roe`, `roa`, `equity_ratio`, `current_ratio`, … |
 | Net cash detail | `cash_and_deposits`, `securities`, `investment_securities`, `short_term_borrowings`, `long_term_borrowings`, `bonds_payable` |
 
-**`quarter IS NULL` = annual record** (source: `edinet`). **`quarter IN (1,2,3)` = quarterly record** (source: `yfinance`). Q4 annual is always from EDINET only.
+**`quarter IS NULL` = annual record** (source: `edinet`). **`quarter IN (1,2,3)` = quarterly record** (source: `jquants`). Q4 annual is always from EDINET only.
 
-`source` column distinguishes data origin: `'edinet'` (full metrics, high accuracy) vs `'yfinance'` (PL/BS/CF subset, partial derived metrics only). yfinance rows never overwrite EDINET rows — enforced by `CASE WHEN source='edinet'` in the upsert.
+`source` column distinguishes data origin:
+- `'edinet'`: full metrics, high accuracy (annual only)
+- `'jquants'`: PL/BS/CF subset from J-Quants API v2, `ordinary_income` NULL for IFRS filers, balance sheet ratios NULL
+- EDINET rows are never overwritten by jquants — enforced by `CASE WHEN source='edinet'` in the upsert
 
 Uniqueness: `UNIQUE(edinet_code, period_end, quarter)` (SQLite enforces via partial index for annual records).
 
