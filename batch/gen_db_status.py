@@ -24,7 +24,7 @@ def generate():
     cur.execute("SELECT MAX(created_at) FROM financials")
     last_financial = cur.fetchone()[0] or "—"
 
-    cur.execute("SELECT MAX(updated_at) FROM prices")
+    cur.execute("SELECT MAX(fetched_at) FROM prices")
     last_price = cur.fetchone()[0] or "—"
 
     cur.execute("""
