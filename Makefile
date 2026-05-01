@@ -1,4 +1,4 @@
-.PHONY: mcp build init batch batch-init batch-sector prices prices-sector quarters quarters-sector status db-stats backups clean
+.PHONY: mcp build init batch batch-init batch-sector prices prices-sector quarters quarters-sector status db-stats db-status-report backups clean
 
 # --- MCP サーバー ---
 
@@ -56,6 +56,11 @@ db-stats:
 		 SELECT '最終更新: ' || MAX(created_at) FROM financials;"
 
 # --- DB バックアップ ---
+
+db-status-report:
+	docker compose --profile batch run --rm \
+		-e STATUS_OUTPUT=/workspace/tmp/db_status.md \
+		batch python gen_db_status.py
 
 backups:
 	@ls -lh data/backups/*.db 2>/dev/null || echo "バックアップなし"

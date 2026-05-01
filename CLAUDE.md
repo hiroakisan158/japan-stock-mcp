@@ -28,6 +28,7 @@ make quarters-sector  # Interactive: specify sector (foreground)
 # Status
 make status           # Batch progress
 make db-stats         # DB row counts and last update timestamp
+make db-status-report # Regenerate tmp/db_status.md (sector coverage report)
 make backups          # List DB backups
 ```
 
@@ -36,6 +37,11 @@ make backups          # List DB backups
 docker compose --profile batch run --rm batch python run.py \
   --mode initial --sector "電気機器" --from-date 2025-06-01 --to-date 2025-09-30
 ```
+
+## Rules
+
+- バッチ（batch, prices, quarters いずれか）を実行したら、必ず最後に `make db-status-report` を実行して `tmp/db_status.md` を更新すること。
+- `tmp/db_status.md` はセクター別カバレッジの最新状態を示すファイル。手動でも確認・共有できる。
 
 ## Details
 
