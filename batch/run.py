@@ -182,7 +182,11 @@ def detect_fetch_range(conn: sqlite3.Connection) -> tuple[date, date]:
         return today - timedelta(days=365 * 5), today
 
     last_date = date.fromisoformat(row["finished_at"][:10])
-    return last_date + timedelta(days=1), today
+    fetch_from = last_date + timedelta(days=1)
+    # 最終バッチが今日以降の場合でも当日分は必ず確認する
+    if fetch_from > today:
+        fetch_from = today
+    return fetch_from, today
 
 
 # ------------------------------------------------------------------ #
