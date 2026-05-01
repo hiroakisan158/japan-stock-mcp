@@ -77,8 +77,8 @@ def generate():
         "",
         "## セクター別カバレッジ",
         "",
-        "| セクター | 企業数 | EDINET(FY)<br>社数/件数 | J-Quants(Q)<br>社数/件数 | 株価<br>社数 |",
-        "|----------|--------|------------------------|--------------------------|-------------|",
+        "| セクター | 企業数 | EDINET(FY) | J-Quants(Q) | 株価 |",
+        "|----------|--------|------------|-------------|------|",
     ]
 
     for sector, total, edinet_cos, edinet_cnt, jq_cos, jq_cnt, price_cos in rows:
@@ -87,8 +87,8 @@ def generate():
         p_icon = _icon(price_cos, total)
         lines.append(
             f"| {sector} | {total} "
-            f"| {e_icon} {edinet_cos}社 {edinet_cnt}件 "
-            f"| {j_icon} {jq_cos}社 {jq_cnt}件 "
+            f"| {e_icon} {edinet_cos}社 "
+            f"| {j_icon} {jq_cos}社 "
             f"| {p_icon} {price_cos}社 |"
         )
 
