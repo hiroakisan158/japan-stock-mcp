@@ -81,9 +81,10 @@ def register(mcp: FastMCP) -> None:
 
     @mcp.tool()
     def update_quarterly(sector: str | None = None) -> dict:
-        """yfinance で四半期財務データ（PL・BS・CF）を取得・更新する。
+        """J-Quants API で四半期財務データ（PL・BS・CF）を取得・更新する。
         sector を指定すると対象セクターのみ更新（同期）。
-        省略すると全銘柄を非同期で更新（数時間程度）。
+        省略すると全銘柄を非同期で更新（約40分）。
+        事前に JQUANTS_REFRESH_TOKEN の設定が必要。
         """
         cmd = ["docker", "compose", "run", "--rm", "batch", "python", "run.py", "--mode", "fetch-quarterly"]
         if sector:
@@ -98,7 +99,10 @@ def register(mcp: FastMCP) -> None:
             if is_async:
                 return {"status": "started", "message": "バックグラウンドで四半期データ取得中。check_batch_status で確認できます。"}
             if result.returncode != 0:
-                return {"status": "failed", "message": result.stderr[:500]}
+                stderr = result.stderr[:500]
+                if "JQUANTS_REFRESH_TOKEN" in stderr or "認証エラー" in stderr or "401" in stderr or "403" in stderr:
+                    return {"status": "failed", "message": f"J-Quants API 認証エラー。.env の JQUANTS_REFRESH_TOKEN を確認してください。\n{stderr}"}
+                return {"status": "failed", "message": stderr}
             return {"status": "completed", "sector": sector}
         except FileNotFoundError:
             return {"status": "error", "message": "Docker が見つかりません。"}

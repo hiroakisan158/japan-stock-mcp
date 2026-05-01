@@ -144,6 +144,10 @@ def run_fetch_quarterly_jquants(sector: str | None = None, sec_code: str | None 
                 break
             except Exception as e:
                 err = str(e)
+                if "401" in err or "403" in err:
+                    raise RuntimeError(
+                        f"J-Quants API 認証エラー。JQUANTS_REFRESH_TOKEN が正しいか確認してください: {e}"
+                    )
                 if "429" in err and attempt < 2:
                     wait = 10 * (attempt + 1)
                     logger.warning(f"  レート制限 (429)、{wait}秒待機して再試行 [{attempt+1}/3]: {name}")
