@@ -8,6 +8,7 @@ data/batch_progress.json
 # 環境変数
 .env
 .env.*
+!.env.example
 
 # Python
 __pycache__/
