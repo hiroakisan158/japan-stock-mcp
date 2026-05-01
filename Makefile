@@ -1,4 +1,4 @@
-.PHONY: mcp build init batch batch-init batch-sector prices prices-sector quarters quarters-sector status db-stats db-status-report backups clean skill
+.PHONY: mcp build init batch batch-init batch-sector prices prices-sector quarters quarters-sector sync sync-sector status db-stats db-status-report backups clean skill
 
 # --- MCP サーバー ---
 
@@ -42,6 +42,21 @@ quarters:
 quarters-sector:
 	@read -p "セクター名: " sector; \
 	docker compose --profile batch run --rm batch python run.py --mode fetch-quarterly --sector "$$sector"
+
+# --- 一括同期 ---
+
+sync:
+	docker compose --profile batch run --rm batch python run.py --mode update
+	docker compose --profile batch run --rm batch python run.py --mode fetch-prices
+	docker compose --profile batch run --rm batch python run.py --mode fetch-quarterly
+	$(MAKE) db-status-report
+
+sync-sector:
+	@read -p "セクター名: " sector; \
+	docker compose --profile batch run --rm batch python run.py --mode update --sector "$$sector" && \
+	docker compose --profile batch run --rm batch python run.py --mode fetch-prices --sector "$$sector" && \
+	docker compose --profile batch run --rm batch python run.py --mode fetch-quarterly --sector "$$sector" && \
+	$(MAKE) db-status-report
 
 # --- 確認・統計 ---
 

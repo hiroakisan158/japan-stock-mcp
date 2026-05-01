@@ -12,6 +12,10 @@ make mcp              # Start MCP server (dev)
 make build            # Build Docker image (required after any batch/ changes)
 make init             # Initialize/migrate DB
 
+# 一括同期（財務差分 → 株価 → 四半期 → ステータスレポート）
+make sync             # All companies
+make sync-sector      # Interactive: specify sector
+
 # Financial data (EDINET/XBRL)
 make batch-init       # Initial load: all companies, past 5 years (background, 8–15h)
 make batch            # Incremental update since last run (background)
