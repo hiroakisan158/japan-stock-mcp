@@ -80,6 +80,30 @@ def register(mcp: FastMCP) -> None:
             return {"status": "error", "message": "Docker が見つかりません。"}
 
     @mcp.tool()
+    def update_quarterly(sector: str | None = None) -> dict:
+        """yfinance で四半期財務データ（PL・BS・CF）を取得・更新する。
+        sector を指定すると対象セクターのみ更新（同期）。
+        省略すると全銘柄を非同期で更新（数時間程度）。
+        """
+        cmd = ["docker", "compose", "run", "--rm", "batch", "python", "run.py", "--mode", "fetch-quarterly"]
+        if sector:
+            cmd += ["--sector", sector]
+
+        is_async = sector is None
+        if is_async:
+            cmd.insert(3, "-d")
+
+        try:
+            result = subprocess.run(cmd, cwd=COMPOSE_DIR, capture_output=True, text=True, timeout=None if is_async else 600)
+            if is_async:
+                return {"status": "started", "message": "バックグラウンドで四半期データ取得中。check_batch_status で確認できます。"}
+            if result.returncode != 0:
+                return {"status": "failed", "message": result.stderr[:500]}
+            return {"status": "completed", "sector": sector}
+        except FileNotFoundError:
+            return {"status": "error", "message": "Docker が見つかりません。"}
+
+    @mcp.tool()
     def check_batch_status() -> dict:
         """実行中・最新バッチの進捗を返す"""
         try:

@@ -3,7 +3,8 @@
 Claude Desktop から日本株の財務分析・銘柄スクリーニングを行う MCP サーバーです。
 
 **データソース**
-- 財務データ: [EDINET](https://disclosure.edinet-fsa.go.jp/)（金融庁・有価証券報告書 XBRL）
+- 年次財務データ: [EDINET](https://disclosure.edinet-fsa.go.jp/)（金融庁・有価証券報告書 XBRL）
+- 四半期財務データ: [yfinance](https://github.com/ranaroussi/yfinance)（Yahoo Finance）
 - 株価・バリュエーション: [yfinance](https://github.com/ranaroussi/yfinance)（Yahoo Finance）
 
 **対象銘柄**: 東証上場の有報提出企業 約3,800社
@@ -22,8 +23,9 @@ MCP Server (WSL / Python / uv)       ← app/
 stocks.db (data/)
     ▲
 Batch (Docker)                        ← batch/
-  ├── EDINET API → XBRL 解析 → financials テーブル
-  └── yfinance → prices テーブル
+  ├── EDINET API → XBRL 解析 → financials テーブル（年次）
+  ├── yfinance → financials テーブル（四半期 Q1/Q2/Q3）
+  └── yfinance → prices テーブル（株価・バリュエーション）
 ```
 
 ---
@@ -106,6 +108,18 @@ make batch-init
 make batch
 ```
 
+### 四半期財務データ（yfinance）
+
+```bash
+# 特定セクターのみ
+make quarters-sector  # → セクター名を入力
+
+# 全銘柄（バックグラウンド、約2時間）
+make quarters
+```
+
+> Yahoo Finance に PL データが存在しない銘柄は BS（総資産）のみ取得、または自動スキップされます。
+
 ### 株価データ（yfinance）
 
 ```bash
@@ -128,15 +142,17 @@ make db-stats
 
 | ツール | 説明 |
 |--------|------|
-| `screen_stocks` | ROE・PER・PBR・営業利益率などで銘柄をフィルタリング |
+| `screen_stocks` | ROE・PER・PBR・営業利益率・四半期 YoY 成長率などで銘柄をフィルタリング |
 | `get_financials` | 企業の財務データを年次で取得（デフォルト5年） |
+| `get_quarterly_financials` | 企業の四半期財務データを取得（QoQ・YoY 成長率付き） |
 | `compare_companies` | 複数企業の財務指標を横並び比較 |
 | `get_company_info` | 企業の基本情報・最新財務サマリー |
 | `list_sectors` | セクター一覧と銘柄数 |
 | `get_annual_report_section` | 有価証券報告書のセクションをテキスト取得 |
 | `get_annual_report_pages` | 有報の指定ページを PDF（base64）で取得 |
-| `update_data` | EDINET から財務データを更新 |
+| `update_data` | EDINET から年次財務データを更新 |
 | `update_prices` | yfinance で株価・バリュエーションを更新 |
+| `update_quarterly` | yfinance で四半期財務データを更新 |
 | `check_batch_status` | バッチの進捗状況を確認 |
 | `backup_db` | DB をローカルにバックアップ |
 | `list_backups` | バックアップ一覧 |
@@ -174,12 +190,27 @@ ROE 15%以上、PER 20倍以下の電気機器銘柄を教えて
 → get_annual_report_section(sec_code="7974", section="事業内容")
 ```
 
+### 四半期業績トレンド
+
+```
+ソニーの直近8四半期の売上と営業利益の推移を見せて
+→ get_quarterly_financials(code="6758", quarters=8)
+```
+
+### 四半期成長率で銘柄スクリーニング
+
+```
+直近四半期の売上が前年同期比10%以上伸びている電気機器銘柄を探して
+→ screen_stocks(sector="電気機器", quarterly_revenue_growth_min=10)
+```
+
 ### データ更新
 
 ```
 電気機器セクターのデータを更新して
 → update_data(sector="電気機器")
 → update_prices(sector="電気機器")
+→ update_quarterly(sector="電気機器")
 ```
 
 ---
@@ -193,10 +224,10 @@ japan-stock-mcp/
 │   ├── db.py                   # SQLite 接続ユーティリティ
 │   ├── pyproject.toml
 │   └── tools/
-│       ├── screener.py         # screen_stocks
-│       ├── financials.py       # get_financials, compare_companies
+│       ├── screener.py         # screen_stocks（四半期 YoY フィルタ対応）
+│       ├── financials.py       # get_financials, get_quarterly_financials, compare_companies
 │       ├── metadata.py         # get_company_info, list_sectors
-│       ├── batch_trigger.py    # update_data, update_prices, backup系
+│       ├── batch_trigger.py    # update_data, update_prices, update_quarterly, backup系
 │       └── annual_report.py    # 有報 PDF ツール
 ├── batch/                      # バッチ処理（Docker で実行）
 │   ├── Dockerfile
@@ -204,12 +235,14 @@ japan-stock-mcp/
 │   ├── edinet.py               # EDINET API クライアント
 │   ├── xbrl_parser.py          # XBRL 解析・派生指標計算
 │   ├── price_fetcher.py        # yfinance 株価取得
+│   ├── quarterly_fetcher.py    # yfinance 四半期財務データ取得
 │   ├── backup.py               # DB バックアップ
 │   ├── init_db.py              # マイグレーション実行
 │   ├── pyproject.toml
 │   └── migrations/
 │       ├── 001_initial.sql     # テーブル定義
-│       └── 002_fix_quarter_uniqueness.sql
+│       ├── 002_fix_quarter_uniqueness.sql
+│       └── 003_add_source_to_financials.sql  # source カラム追加
 ├── data/                       # DB・バックアップ（git 管理外）
 ├── skills/stock-analysis/
 │   └── SKILL.md                # Claude スキル定義
@@ -250,6 +283,8 @@ make batch          # 差分更新バッチ（非同期）
 make batch-sector   # セクター指定バッチ（同期）
 make prices         # 全銘柄株価取得（非同期）
 make prices-sector  # セクター指定株価取得（同期）
+make quarters       # 全銘柄四半期財務取得（非同期）
+make quarters-sector # セクター指定四半期財務取得（同期）
 make status         # バッチ進捗確認
 make db-stats       # DB 統計
 make backups        # バックアップ一覧

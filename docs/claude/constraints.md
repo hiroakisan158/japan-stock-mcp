@@ -38,6 +38,13 @@ If `data/batch_progress.json` exists after a batch run, the run ended abnormally
 
 The MCP server runs directly on the WSL host via `uv` (not in Docker). This is intentional: Docker adds latency and complexity to stdio transport that causes instability with Claude Desktop.
 
+## yfinance Quarterly Data Limitations
+
+- `ordinary_income` is not available from yfinance (Japan-specific line item); stored as NULL
+- Some Japanese companies report YTD cumulative figures instead of single-quarter figures. `quarterly_fetcher.py` logs a warning when Q revenue ≥ 95% of annual revenue
+- Derived metrics (ROE, ROA, equity_ratio, current_ratio, etc.) are NULL for yfinance rows — only PL-based margins are computed
+- Quarter number is inferred from `period_end` relative to the company's fiscal year end month (derived from existing annual records). Companies with no annual data in `financials` are skipped
+
 ## Environment Variables
 
 | Variable | Required | Notes |

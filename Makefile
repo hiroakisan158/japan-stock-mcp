@@ -1,4 +1,4 @@
-.PHONY: mcp build init batch batch-init batch-sector prices prices-sector status db-stats backups clean
+.PHONY: mcp build init batch batch-init batch-sector prices prices-sector quarters quarters-sector status db-stats backups clean
 
 # --- MCP サーバー ---
 
@@ -33,6 +33,15 @@ prices:
 prices-sector:
 	@read -p "セクター名: " sector; \
 	docker compose --profile batch run --rm batch python run.py --mode fetch-prices --sector "$$sector"
+
+# --- 四半期財務データバッチ ---
+
+quarters:
+	docker compose --profile batch run -d --rm batch python run.py --mode fetch-quarterly
+
+quarters-sector:
+	@read -p "セクター名: " sector; \
+	docker compose --profile batch run --rm batch python run.py --mode fetch-quarterly --sector "$$sector"
 
 # --- 確認・統計 ---
 

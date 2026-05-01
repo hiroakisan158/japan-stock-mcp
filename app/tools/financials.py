@@ -59,6 +59,89 @@ def register(mcp: FastMCP) -> None:
         }
 
     @mcp.tool()
+    def get_quarterly_financials(
+        code: str,
+        quarters: int = 8,
+    ) -> dict:
+        """特定企業の四半期財務データを取得する。
+        code は証券コード（例: '7974'）。
+        quarters は取得する四半期数（デフォルト 8 = 直近2年分）。
+        各四半期に前年同期比（YoY）と前四半期比（QoQ）を付与する。
+        """
+        if not db.db_exists():
+            return {"error": "データが未取得です。update_data で初期化してください。"}
+
+        with db.get_connection() as conn:
+            company = conn.execute(
+                "SELECT * FROM companies WHERE sec_code = ?", [code]
+            ).fetchone()
+            if not company:
+                return {"error": f"証券コード {code} が見つかりません"}
+
+            # 成長率計算のために余分に取得（最大 quarters+4 件）
+            rows = conn.execute(
+                "SELECT * FROM financials"
+                " WHERE edinet_code = ? AND quarter IS NOT NULL"
+                " ORDER BY period_end DESC LIMIT ?",
+                [company["edinet_code"], quarters + 4],
+            ).fetchall()
+
+        if not rows:
+            return {
+                "company": {
+                    "sec_code": company["sec_code"],
+                    "company_name": company["company_name"],
+                    "sector": company["sector"],
+                },
+                "quarterly": [],
+                "meta": {"message": "四半期データがありません。update_quarterly で取得してください。"},
+            }
+
+        metrics = [
+            "fiscal_year", "period_end", "quarter", "source",
+            "revenue", "gross_profit", "operating_income", "net_income",
+            "total_assets", "shareholders_equity",
+            "operating_cf", "investing_cf", "financing_cf", "free_cf",
+            "gross_profit_margin", "operating_profit_margin", "net_profit_margin",
+        ]
+
+        records = [{k: dict(r).get(k) for k in metrics} for r in rows]
+
+        # YoY / QoQ 成長率を付与（revenue・operating_income・net_income）
+        growth_keys = ["revenue", "operating_income", "net_income"]
+        for i, rec in enumerate(records):
+            # QoQ: 1つ前のレコード（= 1四半期前）
+            qoq = {}
+            if i + 1 < len(records):
+                prev = records[i + 1]
+                for k in growth_keys:
+                    if rec.get(k) and prev.get(k) and prev[k] != 0:
+                        qoq[k] = round((rec[k] - prev[k]) / abs(prev[k]) * 100, 1)
+            rec["qoq_growth"] = qoq
+
+            # YoY: 同じ quarter の1年前のレコード
+            yoy = {}
+            same_q_prev = next(
+                (r for r in records[i + 1:] if r["quarter"] == rec["quarter"]),
+                None,
+            )
+            if same_q_prev:
+                for k in growth_keys:
+                    if rec.get(k) and same_q_prev.get(k) and same_q_prev[k] != 0:
+                        yoy[k] = round((rec[k] - same_q_prev[k]) / abs(same_q_prev[k]) * 100, 1)
+            rec["yoy_growth"] = yoy
+
+        return {
+            "company": {
+                "sec_code": company["sec_code"],
+                "company_name": company["company_name"],
+                "sector": company["sector"],
+            },
+            "quarterly": records[:quarters],
+            "meta": {"quarters_returned": min(len(records), quarters)},
+        }
+
+    @mcp.tool()
     def compare_companies(
         codes: list[str],
         metrics: list[str] | None = None,

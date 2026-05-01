@@ -299,7 +299,7 @@ def run_update(
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--mode", choices=["init-companies", "initial", "update", "fetch-prices"], default="update")
+    parser.add_argument("--mode", choices=["init-companies", "initial", "update", "fetch-prices", "fetch-quarterly"], default="update")
     parser.add_argument("--sector", default=None)
     parser.add_argument("--sec-code", default=None)
     parser.add_argument("--from-date", default=None, help="取得開始日 YYYY-MM-DD (テスト用)")
@@ -314,6 +314,9 @@ def main() -> None:
     elif args.mode == "fetch-prices":
         from price_fetcher import run_fetch_prices
         run_fetch_prices(args.sector, args.sec_code)
+    elif args.mode == "fetch-quarterly":
+        from quarterly_fetcher import run_fetch_quarterly
+        run_fetch_quarterly(args.sector, args.sec_code)
     else:
         run_update(args.mode, args.sector, args.sec_code, from_date, to_date)
 

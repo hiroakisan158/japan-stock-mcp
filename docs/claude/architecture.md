@@ -28,10 +28,10 @@ Batch  batch/  (Docker container)
 
 | File | Tools registered |
 |------|-----------------|
-| `tools/screener.py` | `screen_stocks` |
-| `tools/financials.py` | `get_financials`, `compare_companies` |
+| `tools/screener.py` | `screen_stocks` (incl. quarterly YoY growth filters) |
+| `tools/financials.py` | `get_financials`, `get_quarterly_financials`, `compare_companies` |
 | `tools/metadata.py` | `get_company_info`, `list_sectors` |
-| `tools/batch_trigger.py` | `update_data`, `update_prices`, `check_batch_status`, `backup_db`, `restore_db` |
+| `tools/batch_trigger.py` | `update_data`, `update_prices`, `update_quarterly`, `check_batch_status`, `backup_db`, `restore_db` |
 | `tools/annual_report.py` | `get_annual_report_section`, `get_annual_report_pages` |
 
 ## Batch (batch/)
@@ -45,6 +45,7 @@ Batch  batch/  (Docker container)
 - `edinet.py`: EDINET API client — fetches document lists and downloads XBRL ZIPs
 - `xbrl_parser.py`: parses XBRL ZIP, extracts financials, computes derived metrics
 - `price_fetcher.py`: fetches price/valuation via yfinance
+- `quarterly_fetcher.py`: fetches quarterly PL/BS/CF via yfinance, upserts into `financials` with `source='yfinance'`
 - `backup.py`: SQLite backup (local + optional S3)
 - `init_db.py`: runs SQL migrations in `migrations/`
 

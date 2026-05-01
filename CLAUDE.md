@@ -21,6 +21,10 @@ make batch-sector     # Interactive: specify sector (foreground)
 make prices           # All companies (background, 30–60 min)
 make prices-sector    # Interactive: specify sector (foreground)
 
+# Quarterly financial data (yfinance)
+make quarters         # All companies (background, ~2h)
+make quarters-sector  # Interactive: specify sector (foreground)
+
 # Status
 make status           # Batch progress
 make db-stats         # DB row counts and last update timestamp
