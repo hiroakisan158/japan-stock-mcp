@@ -1,4 +1,4 @@
-.PHONY: mcp build init batch batch-init batch-sector prices prices-sector quarters quarters-sector sync sync-sector status db-stats db-status-report backups clean skill
+.PHONY: mcp build init batch batch-init batch-sector prices prices-sector quarters quarters-sector sync sync-sector sync-status status db-stats db-status-report backups clean skill
 
 # --- MCP サーバー ---
 
@@ -46,17 +46,26 @@ quarters-sector:
 # --- 一括同期 ---
 
 sync:
-	docker compose --profile batch run --rm batch python run.py --mode update
-	docker compose --profile batch run --rm batch python run.py --mode fetch-prices
-	docker compose --profile batch run --rm batch python run.py --mode fetch-quarterly
-	$(MAKE) db-status-report
+	docker compose --profile batch run --rm \
+		-e STATUS_OUTPUT=/workspace/tmp/db_status.md \
+		batch python sync_runner.py
 
 sync-sector:
 	@read -p "セクター名: " sector; \
-	docker compose --profile batch run --rm batch python run.py --mode update --sector "$$sector" && \
-	docker compose --profile batch run --rm batch python run.py --mode fetch-prices --sector "$$sector" && \
-	docker compose --profile batch run --rm batch python run.py --mode fetch-quarterly --sector "$$sector" && \
-	$(MAKE) db-status-report
+	docker compose --profile batch run --rm \
+		-e STATUS_OUTPUT=/workspace/tmp/db_status.md \
+		batch python sync_runner.py --sector "$$sector"
+
+sync-status:
+	@python3 -c "\
+import json, sys; \
+from pathlib import Path; \
+p = Path('data/sync_progress.json'); \
+d = json.loads(p.read_text()) if p.exists() else None; \
+(print('sync 未実行') or sys.exit(0)) if not d else None; \
+print(f'開始: {d[\"started_at\"]}  セクター: {d.get(\"sector\",\"全社\")}'); \
+[print(f'  {\"✅\" if v[\"status\"]==\"done\" else \"🔄\" if v[\"status\"]==\"running\" else \"❌\" if v[\"status\"]==\"error\" else \"⏳\"} {s:<20} {v[\"status\"]}  {v.get(\"finished_at\",v.get(\"started_at\",\"\"))}') for s,v in d['steps'].items()]; \
+print(f'完了: {d[\"finished_at\"]}') if 'finished_at' in d else print('実行中...')"
 
 # --- 確認・統計 ---
 

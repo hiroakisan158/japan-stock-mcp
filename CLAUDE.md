@@ -15,6 +15,7 @@ make init             # Initialize/migrate DB
 # 一括同期（財務差分 → 株価 → 四半期 → ステータスレポート）
 make sync             # All companies
 make sync-sector      # Interactive: specify sector
+make sync-status      # Show current/last sync progress (data/sync_progress.json)
 
 # Financial data (EDINET/XBRL)
 make batch-init       # Initial load: all companies, past 5 years (background, 8–15h)

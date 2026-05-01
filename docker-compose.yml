@@ -3,6 +3,7 @@ services:
     build: ./batch
     volumes:
       - ./data:/data
+      - ./tmp:/workspace/tmp
       - ~/.aws:/root/.aws:ro
     environment:
       - EDINET_API_KEY=${EDINET_API_KEY}

@@ -15,6 +15,17 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+
+def _setup_file_logging(mode: str) -> None:
+    log_dir = Path(os.environ.get("DB_PATH", "/data/stocks.db")).parent / "logs"
+    log_dir.mkdir(parents=True, exist_ok=True)
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    log_file = log_dir / f"batch_{ts}_{mode}.log"
+    fh = logging.FileHandler(log_file, encoding="utf-8")
+    fh.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(message)s"))
+    logging.getLogger().addHandler(fh)
+    logger.info(f"ログファイル: {log_file}")
+
 DB_PATH = os.environ.get("DB_PATH", "/data/stocks.db")
 PROGRESS_FILE = Path(DB_PATH).parent / "batch_progress.json"
 
@@ -325,6 +336,8 @@ def main() -> None:
     parser.add_argument("--from-date", default=None, help="取得開始日 YYYY-MM-DD (テスト用)")
     parser.add_argument("--to-date", default=None, help="取得終了日 YYYY-MM-DD (テスト用)")
     args = parser.parse_args()
+
+    _setup_file_logging(args.mode)
 
     from_date = date.fromisoformat(args.from_date) if args.from_date else None
     to_date   = date.fromisoformat(args.to_date)   if args.to_date   else None
