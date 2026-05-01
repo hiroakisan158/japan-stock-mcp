@@ -315,8 +315,8 @@ def main() -> None:
         from price_fetcher import run_fetch_prices
         run_fetch_prices(args.sector, args.sec_code)
     elif args.mode == "fetch-quarterly":
-        from quarterly_fetcher import run_fetch_quarterly
-        run_fetch_quarterly(args.sector, args.sec_code)
+        from jquants_fetcher import run_fetch_quarterly_jquants
+        run_fetch_quarterly_jquants(args.sector, args.sec_code)
     else:
         run_update(args.mode, args.sector, args.sec_code, from_date, to_date)
 

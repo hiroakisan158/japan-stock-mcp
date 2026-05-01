@@ -6,6 +6,7 @@ services:
       - ~/.aws:/root/.aws:ro
     environment:
       - EDINET_API_KEY=${EDINET_API_KEY}
+      - JQUANTS_REFRESH_TOKEN=${JQUANTS_REFRESH_TOKEN:-}
       - S3_BUCKET=${S3_BUCKET:-}
       - DB_PATH=/data/stocks.db
     dns:
