@@ -24,10 +24,12 @@ batch:
 batch-init-sector:
 	@sector="$(SECTOR)"; [ -z "$$sector" ] && read -p "セクター名: " sector; \
 	docker compose --profile batch run --rm batch python run.py --mode initial --sector "$$sector"
+	@$(MAKE) --no-print-directory db-status-report
 
 batch-sector:
 	@sector="$(SECTOR)"; [ -z "$$sector" ] && read -p "セクター名: " sector; \
 	docker compose --profile batch run --rm batch python run.py --mode update --sector "$$sector"
+	@$(MAKE) --no-print-directory db-status-report
 
 # --- 株価データバッチ ---
 
@@ -37,6 +39,7 @@ prices:
 prices-sector:
 	@sector="$(SECTOR)"; [ -z "$$sector" ] && read -p "セクター名: " sector; \
 	docker compose --profile batch run --rm batch python run.py --mode fetch-prices --sector "$$sector"
+	@$(MAKE) --no-print-directory db-status-report
 
 # --- 四半期財務データバッチ ---
 
@@ -46,6 +49,7 @@ quarters:
 quarters-sector:
 	@sector="$(SECTOR)"; [ -z "$$sector" ] && read -p "セクター名: " sector; \
 	docker compose --profile batch run --rm batch python run.py --mode fetch-quarterly --sector "$$sector"
+	@$(MAKE) --no-print-directory db-status-report
 
 # --- 一括同期 ---
 
