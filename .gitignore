@@ -34,3 +34,6 @@ Thumbs.db
 
 # Docker
 .docker/
+
+#tmp
+tmp/
