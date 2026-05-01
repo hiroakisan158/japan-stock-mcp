@@ -30,6 +30,9 @@ make status           # Batch progress
 make db-stats         # DB row counts and last update timestamp
 make db-status-report # Regenerate tmp/db_status.md (sector coverage report)
 make backups          # List DB backups
+
+# Claude Desktop skill
+make skill            # Generate skills/stock-analysis.zip for upload
 ```
 
 **Reprocess a specific sector/date range** (use `--mode initial`, not `update`):

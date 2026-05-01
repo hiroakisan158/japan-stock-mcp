@@ -1,3 +1,8 @@
+---
+name: "japan-stock-analysis"
+description: "japan-stocks MCPサーバーで日本株のスクリーニング・財務分析を行う。ROE/PER/PBRでの銘柄絞り込み、財務トレンド分析、企業比較、有価証券報告書の参照に使う。"
+---
+
 # 日本株 財務分析スキル
 
 このスキルは `japan-stocks` MCP サーバーを使って日本株の財務分析・銘柄スクリーニングを行います。

@@ -140,6 +140,25 @@ make db-stats
 
 ---
 
+## Claude Desktop スキル
+
+`skills/stock-analysis/` に Claude Desktop 用のスキル定義があります。スキルを登録すると、Claude がどのツールをどう使うかをより正確に判断できます。
+
+### インストール
+
+```bash
+make skill   # skills/stock-analysis.zip を生成
+```
+
+生成した ZIP を Claude Desktop にアップロードします：
+**設定 > カスタマイズ > Skills > `+` > スキルを作成 > アップロード**
+
+### 更新
+
+`skills/stock-analysis/SKILL.md` を編集後、`make skill` で ZIP を再生成してアップロードし直してください。
+
+---
+
 ## MCP ツール一覧
 
 | ツール | 説明 |
@@ -247,8 +266,11 @@ japan-stock-mcp/
 │       ├── 003_add_source_to_financials.sql  # source カラム追加
 │       └── 004_cleanup_yfinance_quarterly.sql # yfinance 四半期レコード削除
 ├── data/                       # DB・バックアップ（git 管理外）
-├── skills/stock-analysis/
-│   └── SKILL.md                # Claude スキル定義
+├── skills/
+│   ├── stock-analysis/
+│   │   └── SKILL.md            # Claude Desktop スキル定義
+│   ├── stock-analysis.zip      # アップロード用 ZIP（make skill で生成）
+│   └── README.md               # スキルの使い方
 ├── docs/
 │   ├── Japan_stock_mcp_design.md
 │   └── implementation_plan.md
@@ -292,4 +314,5 @@ make status         # バッチ進捗確認
 make db-stats       # DB 統計
 make backups        # バックアップ一覧
 make mcp            # MCP サーバー起動（開発用）
+make skill          # Claude Desktop スキル ZIP を生成（skills/stock-analysis.zip）
 ```

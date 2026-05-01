@@ -1,4 +1,4 @@
-.PHONY: mcp build init batch batch-init batch-sector prices prices-sector quarters quarters-sector status db-stats db-status-report backups clean
+.PHONY: mcp build init batch batch-init batch-sector prices prices-sector quarters quarters-sector status db-stats db-status-report backups clean skill
 
 # --- MCP サーバー ---
 
@@ -64,6 +64,17 @@ db-status-report:
 
 backups:
 	@ls -lh data/backups/*.db 2>/dev/null || echo "バックアップなし"
+
+# --- スキル ---
+
+skill:
+	@python3 -c "\
+import zipfile, os; \
+zf = zipfile.ZipFile('skills/stock-analysis.zip', 'w', zipfile.ZIP_DEFLATED); \
+[zf.write(os.path.join(r,f), os.path.relpath(os.path.join(r,f), 'skills')) \
+ for r,_,files in os.walk('skills/stock-analysis') for f in files]; \
+zf.close()"
+	@echo "作成: skills/stock-analysis.zip — Claude Desktop の カスタマイズ > Skills からアップロードしてください"
 
 # --- クリーン ---
 
