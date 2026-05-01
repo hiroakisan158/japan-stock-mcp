@@ -4,6 +4,8 @@ data/stocks.db-shm
 data/stocks.db-wal
 data/backups/
 data/batch_progress.json
+data/sync_progress.json
+data/logs/
 
 # 環境変数
 .env
