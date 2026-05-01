@@ -8,6 +8,16 @@ DB_PATH = os.environ.get("DB_PATH", "/data/stocks.db")
 OUTPUT_PATH = os.environ.get("STATUS_OUTPUT", "/workspace/tmp/db_status.md")
 
 
+def _icon(cos, total):
+    if total == 0:
+        return "—"
+    if cos == total:
+        return "✅"
+    if cos > 0:
+        return "🔶"
+    return "❌"
+
+
 def generate():
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
@@ -15,14 +25,17 @@ def generate():
     cur.execute("SELECT COUNT(*) FROM companies")
     total_companies = cur.fetchone()[0]
 
-    cur.execute("SELECT COUNT(*) FROM financials")
-    total_financials = cur.fetchone()[0]
+    cur.execute("SELECT COUNT(*) FROM financials WHERE source='edinet'")
+    total_edinet = cur.fetchone()[0]
+
+    cur.execute("SELECT COUNT(*) FROM financials WHERE source='jquants'")
+    total_jquants = cur.fetchone()[0]
 
     cur.execute("SELECT COUNT(*) FROM prices")
     total_prices = cur.fetchone()[0]
 
-    cur.execute("SELECT MAX(created_at) FROM financials")
-    last_financial = cur.fetchone()[0] or "—"
+    cur.execute("SELECT MAX(created_at) FROM financials WHERE source='edinet'")
+    last_edinet = cur.fetchone()[0] or "—"
 
     cur.execute("SELECT MAX(fetched_at) FROM prices")
     last_price = cur.fetchone()[0] or "—"
@@ -30,11 +43,12 @@ def generate():
     cur.execute("""
         SELECT
             c.sector,
-            COUNT(DISTINCT c.edinet_code)                       AS total,
-            COUNT(DISTINCT f.edinet_code)                       AS fin_cos,
-            COUNT(DISTINCT p.edinet_code)                       AS price_cos,
-            ROUND(COUNT(DISTINCT f.edinet_code) * 100.0 / COUNT(DISTINCT c.edinet_code), 0) AS fin_pct,
-            ROUND(COUNT(DISTINCT p.edinet_code) * 100.0 / COUNT(DISTINCT c.edinet_code), 0) AS price_pct
+            COUNT(DISTINCT c.edinet_code)                                        AS total,
+            COUNT(DISTINCT CASE WHEN f.source='edinet'  THEN f.edinet_code END)  AS edinet_cos,
+            COUNT(CASE WHEN f.source='edinet'  THEN 1 END)                       AS edinet_cnt,
+            COUNT(DISTINCT CASE WHEN f.source='jquants' THEN f.edinet_code END)  AS jq_cos,
+            COUNT(CASE WHEN f.source='jquants' THEN 1 END)                       AS jq_cnt,
+            COUNT(DISTINCT p.edinet_code)                                        AS price_cos
         FROM companies c
         LEFT JOIN financials f ON c.edinet_code = f.edinet_code
         LEFT JOIN prices     p ON c.edinet_code = p.edinet_code
@@ -46,31 +60,36 @@ def generate():
 
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     lines = [
-        f"# DB データ取得状況",
-        f"",
+        "# DB データ取得状況",
+        "",
         f"更新日時: {now}",
-        f"",
-        f"## サマリー",
-        f"",
-        f"| 項目 | 件数 |",
-        f"|------|------|",
+        "",
+        "## サマリー",
+        "",
+        "| 項目 | 件数 |",
+        "|------|------|",
         f"| 企業数 | {total_companies:,} 社 |",
-        f"| 財務データ | {total_financials:,} 件 |",
+        f"| EDINET 年次(FY) | {total_edinet:,} 件 |",
+        f"| J-Quants 四半期(Q) | {total_jquants:,} 件 |",
         f"| 株価データ | {total_prices:,} 件 |",
-        f"| 財務データ 最終取得 | {last_financial} |",
-        f"| 株価データ 最終取得 | {last_price} |",
-        f"",
-        f"## セクター別カバレッジ",
-        f"",
-        f"| セクター | 企業数 | 財務取得 | 財務% | 株価取得 | 株価% |",
-        f"|----------|--------|----------|-------|----------|-------|",
+        f"| EDINET 最終取得 | {last_edinet} |",
+        f"| 株価 最終取得 | {last_price} |",
+        "",
+        "## セクター別カバレッジ",
+        "",
+        "| セクター | 企業数 | EDINET(FY)<br>社数/件数 | J-Quants(Q)<br>社数/件数 | 株価<br>社数 |",
+        "|----------|--------|------------------------|--------------------------|-------------|",
     ]
 
-    for sector, total, fin_cos, price_cos, fin_pct, price_pct in rows:
-        fin_bar = "✅" if fin_pct == 100 else ("🔶" if fin_pct > 0 else "❌")
-        price_bar = "✅" if price_pct == 100 else ("🔶" if price_pct > 0 else "❌")
+    for sector, total, edinet_cos, edinet_cnt, jq_cos, jq_cnt, price_cos in rows:
+        e_icon = _icon(edinet_cos, total)
+        j_icon = _icon(jq_cos, total)
+        p_icon = _icon(price_cos, total)
         lines.append(
-            f"| {sector} | {total} | {fin_bar} {fin_cos} | {int(fin_pct)}% | {price_bar} {price_cos} | {int(price_pct)}% |"
+            f"| {sector} | {total} "
+            f"| {e_icon} {edinet_cos}社 {edinet_cnt}件 "
+            f"| {j_icon} {jq_cos}社 {jq_cnt}件 "
+            f"| {p_icon} {price_cos}社 |"
         )
 
     Path(OUTPUT_PATH).parent.mkdir(parents=True, exist_ok=True)
