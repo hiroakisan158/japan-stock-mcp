@@ -294,6 +294,26 @@ def run_update(
 
 
 # ------------------------------------------------------------------ #
+# S3 バックアップヘルパー（fetch-prices / fetch-quarterly 用）          #
+# ------------------------------------------------------------------ #
+
+def _backup_to_s3_pre() -> None:
+    try:
+        from backup import backup_local, backup_to_s3
+        backup_to_s3(backup_local(tag="pre_batch"))
+    except Exception as e:
+        logger.warning(f"バックアップ失敗（続行）: {e}")
+
+
+def _backup_to_s3_post() -> None:
+    try:
+        from backup import backup_local, backup_to_s3
+        backup_to_s3(backup_local(tag="post_batch"))
+    except Exception as e:
+        logger.warning(f"バックアップ失敗（続行）: {e}")
+
+
+# ------------------------------------------------------------------ #
 # メイン                                                               #
 # ------------------------------------------------------------------ #
 
@@ -312,11 +332,15 @@ def main() -> None:
     if args.mode == "init-companies":
         run_init_companies()
     elif args.mode == "fetch-prices":
+        _backup_to_s3_pre()
         from price_fetcher import run_fetch_prices
         run_fetch_prices(args.sector, args.sec_code)
+        _backup_to_s3_post()
     elif args.mode == "fetch-quarterly":
+        _backup_to_s3_pre()
         from jquants_fetcher import run_fetch_quarterly_jquants
         run_fetch_quarterly_jquants(args.sector, args.sec_code)
+        _backup_to_s3_post()
     else:
         run_update(args.mode, args.sector, args.sec_code, from_date, to_date)
 
