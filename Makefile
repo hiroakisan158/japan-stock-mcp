@@ -1,5 +1,8 @@
 .PHONY: mcp build init batch batch-init batch-init-sector batch-sector prices prices-sector quarters quarters-sector sync sync-sector sync-status status db-stats db-status-report backups clean skill
 
+YEARS ?= 5
+FROM_DATE ?= $(shell date -d "-$(YEARS) years" +%Y-%m-%d 2>/dev/null || date -v-$(YEARS)y +%Y-%m-%d)
+
 # --- MCP サーバー ---
 
 mcp:
@@ -16,14 +19,14 @@ init:
 # --- 財務データバッチ ---
 
 batch-init:
-	docker compose --profile batch run -d --rm batch python run.py --mode initial
+	docker compose --profile batch run -d --rm batch python run.py --mode initial --from-date "$(FROM_DATE)"
 
 batch:
 	docker compose --profile batch run -d --rm batch python run.py --mode update
 
 batch-init-sector:
 	@sector="$(SECTOR)"; [ -z "$$sector" ] && read -p "セクター名: " sector; \
-	docker compose --profile batch run --rm batch python run.py --mode initial --sector "$$sector"
+	docker compose --profile batch run --rm batch python run.py --mode initial --sector "$$sector" --from-date "$(FROM_DATE)"
 	@$(MAKE) --no-print-directory db-status-report
 
 batch-sector:

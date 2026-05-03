@@ -18,10 +18,12 @@ make sync-sector      # Interactive: specify sector
 make sync-status      # Show progress from data/sync_progress.json
 
 # Financial data (EDINET/XBRL)
-make batch-init       # Initial load: all companies, past 5 years (8–15h)
-make batch-init-sector  # Initial load: specify sector, past 5 years (SECTOR=ゴム製品)
-make batch            # Incremental update since last run (background)
-make batch-sector     # Interactive: specify sector (foreground)
+make batch-init               # Initial load: all companies, past 5 years (8–15h)
+make batch-init YEARS=10      # Initial load: all companies, past 10 years
+make batch-init-sector        # Initial load: specify sector, past 5 years (SECTOR=ゴム製品)
+make batch-init-sector YEARS=10  # Initial load: specify sector, past 10 years
+make batch                    # Incremental update since last run (background)
+make batch-sector             # Interactive: specify sector (foreground)
 
 # Price data (yfinance)
 make prices           # All companies (30–60 min)

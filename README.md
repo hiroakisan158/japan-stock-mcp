@@ -80,11 +80,14 @@ docker compose --profile batch run --rm batch python run.py --mode init-companie
 # セクター指定（例: 電気機器）— 1〜2時間、フォアグラウンド実行
 make batch-init-sector SECTOR=電気機器
 
+# 10年分取得したい場合（デフォルトは5年）
+make batch-init-sector SECTOR=電気機器 YEARS=10
+
 # 全銘柄（8〜15時間、バックグラウンド実行）
 make batch-init
 ```
 
-> `make batch-init` / `make batch-init-sector` は EDINET から過去5年分の有価証券報告書を取得します。
+> `make batch-init` / `make batch-init-sector` は EDINET から過去5年分の有価証券報告書を取得します（`YEARS=10` で10年分に変更可）。
 > 株価・四半期データはこの後の手順で取得します。
 
 ### 6. 株価・四半期データの初期取得
@@ -328,8 +331,10 @@ make sync-sector    # セクター指定（入力プロンプトあり）
 make sync-status    # 直近 sync の進捗確認（data/sync_progress.json）
 
 # 個別バッチ
-make batch-init          # 初回バッチ（全銘柄・過去5年、非同期）
-make batch-init-sector   # 初回バッチ・セクター指定（SECTOR=ゴム製品、同期）
+make batch-init                       # 初回バッチ（全銘柄・過去5年、非同期）
+make batch-init YEARS=10              # 初回バッチ（全銘柄・過去10年）
+make batch-init-sector                # 初回バッチ・セクター指定（SECTOR=ゴム製品、同期）
+make batch-init-sector YEARS=10       # 初回バッチ・セクター指定・10年分
 make batch               # 差分更新バッチ（非同期）
 make batch-sector        # セクター指定差分バッチ（同期）
 make prices         # 全銘柄株価取得（非同期）
