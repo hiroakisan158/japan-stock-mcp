@@ -257,6 +257,26 @@ def run_update(
     target_docs = [d for d in all_docs if d.get("edinetCode") in edinet_codes]
     logger.info(f"対象書類: {len(target_docs)} 件")
 
+    # initial モードのとき、取得済み書類をスキップ
+    if mode == "initial":
+        existing_keys = {
+            (row[0], row[1])
+            for row in conn.execute(
+                "SELECT edinet_code, period_end FROM financials WHERE source='edinet'"
+            ).fetchall()
+        }
+        codes_before = {d.get("edinetCode") for d in target_docs}
+        before = len(target_docs)
+        target_docs = [
+            d for d in target_docs
+            if (d.get("edinetCode"), d.get("periodEnd", "")) not in existing_keys
+        ]
+        codes_after = {d.get("edinetCode") for d in target_docs}
+        skipped_docs = before - len(target_docs)
+        skipped_companies = len(codes_before - codes_after)
+        if skipped_docs:
+            logger.info(f"スキップ（取得済み）: {skipped_docs} 件 / {skipped_companies} 社 → 残り {len(target_docs)} 件")
+
     processed = errors = 0
     total = len(target_docs)
 
