@@ -81,14 +81,25 @@ def fetch_document_list(target_date: date) -> list[dict]:
 
 def fetch_document_list_range(start: date, end: date) -> list[dict]:
     """期間内の有価証券報告書の書類一覧を取得する"""
+    import logging
+    logger = logging.getLogger(__name__)
+
     all_docs: list[dict] = []
     current = start
+    total_days = (end - start).days + 1
+    day_num = 0
+
     while current <= end:
+        day_num += 1
         try:
             docs = fetch_document_list(current)
             all_docs.extend(docs)
+            if docs:
+                logger.info(f"  {current} ({day_num}/{total_days}日) +{len(docs)}件 累計{len(all_docs)}件")
+            elif day_num % 30 == 0:
+                logger.info(f"  {current} ({day_num}/{total_days}日) 累計{len(all_docs)}件")
         except Exception as e:
-            print(f"  警告: {current} の書類一覧取得失敗: {e}")
+            logger.warning(f"  警告: {current} の書類一覧取得失敗: {e}")
         time.sleep(1)
         current += timedelta(days=1)
     return all_docs

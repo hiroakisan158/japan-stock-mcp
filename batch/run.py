@@ -272,10 +272,14 @@ def run_update(
             if (d.get("edinetCode"), d.get("periodEnd", "")) not in existing_keys
         ]
         codes_after = {d.get("edinetCode") for d in target_docs}
+        skipped_codes = codes_before - codes_after
         skipped_docs = before - len(target_docs)
-        skipped_companies = len(codes_before - codes_after)
+        skipped_companies = len(skipped_codes)
         if skipped_docs:
             logger.info(f"スキップ（取得済み）: {skipped_docs} 件 / {skipped_companies} 社 → 残り {len(target_docs)} 件")
+            company_name_map = {c["edinet_code"]: c["company_name"] for c in companies}
+            for code in sorted(skipped_codes):
+                logger.info(f"  スキップ: {company_name_map.get(code, code)}")
 
     processed = errors = 0
     total = len(target_docs)
